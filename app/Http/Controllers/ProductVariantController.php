@@ -99,7 +99,7 @@ class ProductVariantController extends Controller
             
         } else{
             return redirect()->back()->with([
-                'error' => "You Dont have Access To Create Outlets",
+                'error' => "You Dont have Access To Create variants",
             ]);
         }
     }
@@ -144,8 +144,27 @@ class ProductVariantController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($variant_id)
     {
-        //
+        if(auth()->user()->hasPermissionTo('variant-delete')){
+            $variant =  $this->model->show($variant_id); 
+            $details = ProductVariants::where([
+                "variant_id" => $variant_id, 
+            ])->first();
+ 
+            $log = new Activitylog([
+                "operations" => "Deleted ". " ". $details->variant_name. " ". " From The Product Variant List",
+                "user_id" => Auth::user()->id,
+            ]);
+            if (($variant->delete($variant_id)) AND ($variant->trashed())) {
+                return redirect()->back()->with([
+                    'success' => "You Have Deleted ". " ". $details->variant_name. " ". "From The Product Variant Successfully",
+                ]);
+            }
+        } else{
+            return redirect()->back()->with([
+                'error' => "You Dont have Access To Delete A Product Variant",
+            ]);
+        }
     }
 }

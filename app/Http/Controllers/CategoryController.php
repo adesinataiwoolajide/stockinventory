@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\{Categories, User, Activitylog};
 use App\Repositories\CategoryRepository;
 use DB;
+use Validator;
 use Illuminate\Support\Facades\Auth;
 
 class CategoryController extends Controller
@@ -48,9 +49,15 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         if(auth()->user()->hasPermissionTo('category-create')){
-            $this->validate($request, [
+            $validator = Validator::make($request->all(), [
                 'category_name' =>'required|min:1|max:255|unique:categories',
             ]);
+            if($validator->fails()){
+                return redirect()->back()->with([
+                    "error" => "You Have added ". " ". $request->input('category_name'). " ". 
+                    "To The Category List Before"
+                ]);
+            }
             $data = ([
                 "category" => new Categories,
                 "category_name" => $request->input("category_name"),
@@ -113,8 +120,18 @@ class CategoryController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($category_id)
     {
-        //
+        $category =  $this->model->show($category_id); 
+        $details= $category->category_name;  
+        $log = new Activitylog([
+            "operations" => "Deleted ". $details. " From The Category List",
+            "user_id" => Auth::user()->id,
+        ]);
+        if (($category->delete($category_id))AND ($category->trashed())) {
+            return redirect()->back()->with([
+                'success' => "You Have Deleted". " ". $details. " ". "From The Category Details Successfully",
+            ]);
+        }
     }
 }

@@ -5,14 +5,22 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\User;
+use App\{User, Activitylog};
 use Spatie\Permission\Models\Role;
 use DB;
-use Hash;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use App\Repositories\UserRepository;
 
 
 class UserController extends Controller
 {
+    protected $model;
+    public function __construct(User $user)
+    {
+       // set the model
+       $this->model = new UserRepository($user);
+    }
     /**
      * Display a listing of the resource.
      *
@@ -20,9 +28,11 @@ class UserController extends Controller
      */
     public function index()
     {
-        $data = User::orderBy('id','DESC');
+        $user =$this->model->all();
+        $user_roles = Role::all();
         return view('administrator.users.create')->with([
-            'data' => $data,
+            'user' => $user,
+            'user_roles' => $user_roles,
         ]);
     }
 
@@ -34,8 +44,8 @@ class UserController extends Controller
      */
     public function create()
     {
-        $roles = Role::pluck('name','name')->all();
-        return view('users.create',compact('roles'));
+        // $roles = Role::pluck('name','name')->all();
+        // return view('users.create',compact('roles'));
     }
 
 
@@ -47,24 +57,42 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $this->validate($request, [
-            'name' => 'required',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|same:confirm-password',
-            'roles' => 'required'
-        ]);
+        if(auth()->user()->hasPermissionTo('user-create')){
+            $this->validate($request, [
+                'name' => 'required|min:1|max:255|',
+                'email' => 'required||min:1|max:255|unique:users',
+                'password' => 'required|min:1|max:255',
+                'role' => 'required|min:1|max:255'
+            ]);
+            
+            if(User::where("email", $request->input("email"))->exists()){
+                return redirect()->back()->with("error", "The E-Mail is In Use By Another User");
+            }
+            $user =new User([
+                "email" => $request->input("email"),
+                "name" => $request->input("name"),
+                "password" => Hash::make($request->input("password")),
+                "role" => $request->input("role"),
+                "status" => 1,
+            ]);
 
+            $log = new Activitylog([
+                "operations" => "Added ".$request->input("email"). " To The User List",
+                "user_id" => Auth::user()->user_id,
+            ]);
 
-        $input = $request->all();
-        $input['password'] = Hash::make($input['password']);
-
-
-        $user = User::create($input);
-        $user->assignRole($request->input('roles'));
-
-
-        return redirect()->route('users.index')
-                        ->with('success','User created successfully');
+            if(($log->save()) AND ($this->model->create($user))){
+                $addRoles = $user->assignRole($request->input('roles'));
+                return redirect()->route("user.create")->with("success", "You Have Added User " 
+                .$request->input("email"). " The User List Successfully");
+            }else{
+            return redirect()->back()->with("error", "Network Failure");
+            } 
+        } else{
+            return redirect()->back()->with([
+                'error' => "You Dont have Access To Create A User",
+            ]);
+        }
     }
 
 
@@ -142,10 +170,30 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($user_id)
     {
-        User::find($id)->delete();
-        return redirect()->route('users.index')
-        ->with('success','User deleted successfully');
+        if(auth()->user()->hasPermissionTo('user-delete')){
+            $user =  Branch::find($user_id);; 
+            $details= $user->name; 
+            $email = $details->email;
+            $user = User::where([
+                "email" => $email, 
+            ])->first();
+            $user_id = $user->user_id;
+
+            $log = new Activitylog([
+                "operations" => "Deleted ". $details. " From The User List",
+                "user_id" => Auth::user()->id,
+            ]);
+            if (($user->delete($user_id)) AND ($user->trashed()) AND ($log->save())) {
+                return redirect()->back()->with([
+                    'success' => "You Have Deleted". $details. " ". "From The User Details Successfully",
+                ]);
+            }
+        } else{
+            return redirect()->back()->with([
+                'error' => "You Dont have Access To Delete A User",
+            ]);
+        }
     }
 }

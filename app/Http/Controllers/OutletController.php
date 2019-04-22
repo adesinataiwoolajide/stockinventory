@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use App\{Outlets, User, Activitylog};
 use App\Repositories\OutletRepository;
 use DB;
+use Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -48,9 +49,15 @@ class OutletController extends Controller
     public function store(Request $request)
     {
         if(auth()->user()->hasPermissionTo('outlet-create')){
-            $this->validate($request, [
+            $validator = Validator::make($request->all(), [
                 'outlet_name' =>'required|min:1|max:255|unique:outlets',
             ]);
+            if($validator->fails()){
+                return redirect()->back()->with([
+                    "error" => "You Have added ". " ". $request->input('outlet_name'). " ". 
+                    "To The outlet list Before"
+                ]);
+            }
             $data = ([
                 "outlet" => new Outlets,
                 "outlet_name" => $request->input("outlet_name"),
@@ -112,8 +119,27 @@ class OutletController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($outlet_id)
     {
-        //
+        if(auth()->user()->hasPermissionTo('outlet-delete')){
+            $outlet =  $this->model->show($outlet_id); 
+            $details = Outlets::where([
+                "outlet_id" => $outlet_id, 
+            ])->first();
+ 
+            $log = new Activitylog([
+                "operations" => "Deleted ". " ". $details->outlet_name. " ". " From The Product Variant List",
+                "user_id" => Auth::user()->id,
+            ]);
+            if (($outlet->delete($outlet_id)) AND ($outlet->trashed())) {
+                return redirect()->back()->with([
+                    'success' => "You Have Deleted ". " ". $details->outlet_name. " ". "From The Product Variant List Successfully",
+                ]);
+            }
+        } else{
+            return redirect()->back()->with([
+                'error' => "You Dont have Access To Delete A Product Variant",
+            ]);
+        }
     }
 }

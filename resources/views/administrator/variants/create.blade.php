@@ -10,12 +10,32 @@
             <div class="main-panel">
                 <div class="content-wrapper"> 
                     <div class="row">
+                        <div class="col-md-12 grid-margin stretch-card">
+                            <div class="card">
+                                <div class="card-body">
+                                    
+                                    <div class="template-demo">
+                                            
+                                        <nav aria-label="breadcrumb">
+                                            <ol class="breadcrumb breadcrumb-custom">
+                                                <li class="breadcrumb-item"><a href="{{route('administrator.dashboard')}}">Home</a></li>
+                                                <li class="breadcrumb-item"><a href="{{route('variant.create')}}">Add Variant</a></li>
+                                                <li class="breadcrumb-item active" aria-current="page"><span>List of Saved Product Variants</span></li>
+                                            </ol>
+                                        </nav>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
                         <div class="col-lg-12 grid-margin stretch-card">
                           <!--x-editable starts-->
                             <div class="card">
                                 <div class="card-body">
                                     <p class="card-description"></p>
                                     <div class="template-demo">
+                                        @include('partials._message');
                                         <form action="{{route('variant.save')}}" method="POST" enctype="multipart/form-data">
                                             {{ csrf_field() }}
                                             <div class="form-group row">
@@ -132,9 +152,10 @@
                                                         @foreach($variant as $variants)
                                                             <tr>
                                                                 <td>{{$y}}
-                                                                    <a href="" class="btn btn-danger"><i class="far fa-trash-o"></i>
+                                                                    <a href="{{route('variant.delete',$variants->variant_id)}}" 
+                                                                        class=""><i class="fa fa-trash-o"></i>
                                                                     Delete</a>
-                                                                    <a href="" class="btn btn-primary"><i class="far fa-pencil"></i> 
+                                                                    <a href="" class=""><i class="far fa-pencil"></i> 
                                                                     Edit</a>  
                                                                 </td>
                                                                 <td>

@@ -21,51 +21,69 @@
                                             {{ csrf_field() }}
                                             <div class="form-group row">
                                                 <div class="form-group col-md-4">
-                                                    <input type="text" name="name" class="form-control" required placeholder="Enter The Distributor Name">
+                                                    <input type="text" name="product_name" class="form-control" required 
+                                                    placeholder="Enter The Product Name">
                                                     {{-- <span style="color: red">** This Field is Required **</span>      --}}
-                                                    @if ($errors->has('name'))
+                                                    @if ($errors->has('product_name'))
                                                         <div class="alert alert-danger alert-dismissible" role="alert">
                                                             <button type="button" class="close" data-dismiss="alert">&times;</button>
                                                             <div class="alert-icon contrast-alert">
                                                                 <i class="fa fa-check"></i>
                                                             </div>
                                                             <div class="alert-message">
-                                                                <span><strong>Error!</strong> {{ $errors->first('name') }} !</span>
+                                                                <span><strong>Error!</strong> {{ $errors->first('product_name') }} !</span>
                                                             </div>
                                                         </div>
                                                     @endif  
                                                 </div>
                                                 <div class="form-group col-md-4">
-                                                    <input type="number" name="phone_one" class="form-control" required placeholder="Enter The Phone One">
-                                                    @if ($errors->has('phone_one'))
+                                                    <select class="form-control" name="supplier_id" required>
+                                                        <option value=""> -- Select The Supplier --</option>\
+                                                        <option value=""> </option>
+                                                        @foreach($supplier as $supliers)
+                                                            <option value="{{$suppliers->supplier_id}}">{{$suppliers->supplier_name}}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    @if ($errors->has('supplier_id'))
                                                         <div class="alert alert-danger alert-dismissible" role="alert">
                                                             <button type="button" class="close" data-dismiss="alert">&times;</button>
                                                             <div class="alert-icon contrast-alert">
                                                                 <i class="fa fa-check"></i>
                                                             </div>
                                                             <div class="alert-message">
-                                                                <span><strong>Error!</strong> {{ $errors->first('phone_one') }} !</span>
+                                                                <span><strong>Error!</strong> {{ $errors->first('supplier_id') }} !</span>
                                                             </div>
                                                         </div>
                                                     @endif  
                                                 </div>
                                                 <div class="form-group col-md-4">
-                                                    <input type="number" name="phone_two" class="form-control" required placeholder="Enter The Phone Two">
-                                                    @if ($errors->has('phone_two'))
+                                                    <select class="form-control" name="category_id" required>
+                                                        <option value=""> -- Select The Category --</option>\
+                                                        <option value=""> </option>
+                                                        @foreach($category as $categories)
+                                                            <option value="{{$categories->category_id}}">{{$categories->category_name}}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    @if ($errors->has('category_id'))
                                                         <div class="alert alert-danger alert-dismissible" role="alert">
                                                             <button type="button" class="close" data-dismiss="alert">&times;</button>
                                                             <div class="alert-icon contrast-alert">
                                                                 <i class="fa fa-check"></i>
                                                             </div>
                                                             <div class="alert-message">
-                                                                <span><strong>Error!</strong> {{ $errors->first('phone_two') }} !</span>
+                                                                <span><strong>Error!</strong> {{ $errors->first('category_id') }} !</span>
                                                             </div>
                                                         </div>
                                                     @endif  
                                                 </div>
                                                 <div class="form-group col-md-4">
-                                                    <input type="email" name="email" class="form-control" required placeholder="Enter The E-Mail">
-                                                    {{-- <span style="color: red">** This Field is Required **</span>      --}}
+                                                    <select class="form-control" name="category_id" required>
+                                                        <option value=""> -- Select The Variant --</option>\
+                                                        <option value=""> </option>
+                                                        @foreach($variant as $variants)
+                                                            <option value="{{$variants->variant_id}}">{{$variants->variant_name}}</option>
+                                                        @endforeach
+                                                    </select>
                                                     @if ($errors->has('email'))
                                                         <div class="alert alert-danger alert-dismissible" role="alert">
                                                             <button type="button" class="close" data-dismiss="alert">&times;</button>
@@ -79,45 +97,51 @@
                                                     @endif  
                                                 </div>
                                                 <div class="form-group col-md-4">
-                                                    <input type="number" name="credit_limit" class="form-control" required placeholder="Enter The Credit Limit">
-                                                    @if ($errors->has('credit_limit'))
+                                                    <input type="number" name="quantity" class="form-control" required 
+                                                    placeholder="Enter The Quantity">
+                                                    @if ($errors->has('quantity'))
                                                         <div class="alert alert-danger alert-dismissible" role="alert">
                                                             <button type="button" class="close" data-dismiss="alert">&times;</button>
                                                             <div class="alert-icon contrast-alert">
                                                                 <i class="fa fa-check"></i>
                                                             </div>
                                                             <div class="alert-message">
-                                                                <span><strong>Error!</strong> {{ $errors->first('credit_limit') }} !</span>
+                                                                <span><strong>Error!</strong> {{ $errors->first('quantity') }} !</span>
                                                             </div>
                                                         </div>
                                                     @endif  
                                                 </div>
                                                 <div class="form-group col-md-4">
-                                                    <input type="number" name="credit_reduction_per_month" class="form-control" required 
-                                                    placeholder="Enter The Credit Reduction">
-                                                    @if ($errors->has('credit_reduction_per_month'))
+                                                    <input type="number" name="amount" class="form-control" required 
+                                                    placeholder="Enter The Amount">
+                                                    @if ($errors->has('amount'))
                                                         <div class="alert alert-danger alert-dismissible" role="alert">
                                                             <button type="button" class="close" data-dismiss="alert">&times;</button>
                                                             <div class="alert-icon contrast-alert">
                                                                 <i class="fa fa-check"></i>
                                                             </div>
                                                             <div class="alert-message">
-                                                                <span><strong>Error!</strong> {{ $errors->first('credit_reduction_per_month') }} !</span>
+                                                                <span><strong>Error!</strong> {{ $errors->first('amount') }} !</span>
                                                             </div>
                                                         </div>
                                                     @endif  
                                                 </div>
                                                 <div class="form-group col-md-4">
-                                                    <input type="text" name="name" class="form-control" required placeholder="Enter The Distributor Name">
-                                                    {{-- <span style="color: red">** This Field is Required **</span>      --}}
-                                                    @if ($errors->has('name'))
+                                                    <select class="form-control" name="ware_house_id" required>
+                                                        <option value=""> -- Select The Ware House --</option>\
+                                                        <option value=""> </option>
+                                                        @foreach($warehouse as $warehouses)
+                                                            <option value="{{$warehouses->ware_house_id}}">{{$warehouses->ware_house_name}}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    @if ($errors->has('ware_house_id'))
                                                         <div class="alert alert-danger alert-dismissible" role="alert">
                                                             <button type="button" class="close" data-dismiss="alert">&times;</button>
                                                             <div class="alert-icon contrast-alert">
                                                                 <i class="fa fa-check"></i>
                                                             </div>
                                                             <div class="alert-message">
-                                                                <span><strong>Error!</strong> {{ $errors->first('name') }} !</span>
+                                                                <span><strong>Error!</strong> {{ $errors->first('ware_house_id') }} !</span>
                                                             </div>
                                                         </div>
                                                     @endif  

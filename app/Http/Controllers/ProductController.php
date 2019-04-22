@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\{Products, ProductVariants, Categories, User, Activitylog};
+use App\{Products, ProductVariants, Categories, User, Activitylog, Suppliers, WareHouseManagement};
 use App\Repositories\ProductRepository;
 use DB;
 use Illuminate\Support\Facades\Auth;
@@ -31,13 +31,17 @@ class ProductController extends Controller
     public function index()
     {
         $category= Categories::all();
+        $supplier= Suppliers::all();
         $variant = ProductVariants::all();
-        $product =  $this->model->all();;
+        $warehouse = WareHouseManagement::all();
+        $product =  $this->model->all();
         return view('administrator.products.create')
             ->with([
             "category" => $category,
             "variant" => $variant,
             "product" => $product,
+            'supplier' => $supplier,
+            "warehouse" => $warehouse,
         ]);
     }
 

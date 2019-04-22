@@ -58,38 +58,53 @@ class SupplierController extends Controller
                 'state' =>'required|min:1|max:255',
                 'country' =>'required|min:1|max:255',
                 'address' =>'required|min:1|max:255',
-
             ]);
-            $data = ([
-                "supplier" => new Suppliers,
-                "name" => $request->input("name"),
-                "email" => $request->input("email"),
-                "phone_one" => $request->input("phone_one"),
-                "phone_two" => $request->input("phone_two"),
-                "city" => $request->input("city"),
-                "state" => $request->input("state"),
-                "country" => $request->input("country"),
-                "address" => $request->input("address"), 
-            ]);
-            $role= 'Supplier';
+            if(Suppliers::where("email", $request->input("email"))->exists()){
+                return redirect()->back()->with("error", $request->input("emil"). 
+                " is Already in use by another supplier");
 
-            $use = new User([
-                "email" => $request->input("email"),
-                "name" => $request->input("name"),
-                "password" => Hash::make($request->input("email")),
-                "role" => $role,
-                "status" => 0,
-                "registration_number" => rand(0001, 1000),
-            ]);
+            }elseif(Suppliers::where("phone_one", $request->input("phone_one"))->exists()){
+                return redirect()->back()->with("error", $request->input("phone_one"). 
+                " Already in use by another supplier");
+            }elseif(Suppliers::where("phone_two", $request->input("phone_two"))->exists()){
+                return redirect()->back()->with("error", $request->input("phone_two"). 
+                " Already in use by another supplier");
+            }elseif(User::where("email", $request->input("email"))->exists()){
+                return redirect()->back()->with("error", $request->input("email"). 
+                " Already in use by another User");
 
-            $log = new Activitylog([
-                "operations" => "Added ".$request->input("name"). " To The Supplier List",
-                "user_id" => Auth::user()->user_id,
-            ]);
+            }else{
 
-            if($log->save() AND ($this->model->create($data)) AND $use->save()){
-                return redirect()->route("supplier.create")->with("success", "You Have Added " 
-                .$request->input("name"). " To The Supplier List Successfully");
+                $data = ([
+                    "supplier" => new Suppliers,
+                    "name" => $request->input("name"),
+                    "email" => $request->input("email"),
+                    "phone_one" => $request->input("phone_one"),
+                    "phone_two" => $request->input("phone_two"),
+                    "city" => $request->input("city"),
+                    "state" => $request->input("state"),
+                    "country" => $request->input("country"),
+                    "address" => $request->input("address"), 
+                ]);
+
+                $use = new User([
+                    "email" => $request->input("email"),
+                    "name" => $request->input("name"),
+                    "password" => Hash::make($request->input("email")),
+                    "role" => 'Supplier',
+                    "status" => 1,
+                ]);
+
+                $log = new Activitylog([
+                    "operations" => "Added ".$request->input("name"). " To The Supplier List",
+                    "user_id" => Auth::user()->user_id,
+                ]);
+
+                if($log->save() AND ($this->model->create($data)) AND $use->save()){
+                    $addRoles = $use->assignRole("Supplier");
+                    return redirect()->route("supplier.create")->with("success", "You Have Added " 
+                    .$request->input("name"). " To The Supplier List Successfully");
+                }
             }
         } else{
             return redirect()->back()->with([
@@ -138,8 +153,29 @@ class SupplierController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($supplier_id)
     {
-        //
+        if(auth()->user()->hasPermissionTo('supplier-delete')){
+            $supplier =  $this->model->show($supplier_id); 
+            $details= $supplier->supplier_name; 
+            $email = $details->email ;
+            $user = User::where([
+                "email" => $email, 
+            ])->first();
+            $user_id = $user->user_id;
+            $log = new Activitylog([
+                "operations" => "Deleted ". $details. " From The Supplier List",
+                "user_id" => Auth::user()->id,
+            ]);
+            if (($supplier->delete($supplier_id)) AND ($supplier->trashed()) AND($user->delete()) AND ($user->trach()) AND ($log->save())) {
+                return redirect()->back()->with([
+                    'success' => "You Have Deleted". $details. " ". "From The Supplier Details Successfully",
+                ]);
+            }
+        } else{
+            return redirect()->back()->with([
+                'error' => "You Dont have Access To Delete A Supplier",
+            ]);
+        }
     }
 }

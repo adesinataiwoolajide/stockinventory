@@ -12,10 +12,10 @@ use Illuminate\Support\Facades\Hash;
 class WareHouseManagementController extends Controller
 {
     protected $model;
-    public function __construct(WareHouseManagement $distributor)
+    public function __construct(WareHouseManagement $warehouse)
     {
        // set the model
-       $this->model = new WareHouseRepository($distributor);
+       $this->model = new WareHouseRepository($warehouse);
     }
     /**
      * Display a listing of the resource.
@@ -139,8 +139,27 @@ class WareHouseManagementController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($ware_house_id)
     {
-        //
+        if(auth()->user()->hasPermissionTo('warehouse-delete')){
+            $warehouse =  $this->model->show($ware_house_id); 
+            $details = WareHouseManagement::where([
+                "ware_house_id" => $ware_house_id, 
+            ])->first();
+ 
+            $log = new Activitylog([
+                "operations" => "Deleted ". " ". $details->name. " ". " From The Ware House List",
+                "user_id" => Auth::user()->id,
+            ]);
+            if (($warehouse->delete($ware_house_id)) AND ($warehouse->trashed())) {
+                return redirect()->back()->with([
+                    'success' => "You Have Deleted ". " ". $details->name. " ". "From The Ware House List Successfully",
+                ]);
+            }
+        } else{
+            return redirect()->back()->with([
+                'error' => "You Dont have Access To Delete A Ware House",
+            ]);
+        }
     }
 }

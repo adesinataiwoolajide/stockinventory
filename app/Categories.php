@@ -3,12 +3,13 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\SoftDeletes;
 class Categories extends Model
 {
-    use HasRoles;
-    protected $guard_name = 'web';
+    use SoftDeletes;
+   // protected $guard_name = 'web';
     protected $table = 'categories';
+    protected $primaryKey = 'category_id';
     protected $fillable = [
         'category_name',
     ];

@@ -149,8 +149,24 @@ class AssignOutletController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+   
+    public function destroy($assign_id)
     {
-        //
+        $assign_outlet =  $this->model->show($assign_id); 
+        $details= $assign_outlet->assign_name; 
+        $distributor_id = $assign_outlet->distributor_id;
+        $distrib = Distributors::where([
+            "distributor_id" => $distributor_id, 
+        ])->first(); 
+        $log = new Activitylog([
+            "operations" => "Deleted Outlet ". " ". $details. " Assigned to ". " ". $distrib->name,
+            "user_id" => Auth::user()->id,
+        ]);
+        if (($assign->delete($assign_id))AND ($assign_outlet->trashed())) {
+            return redirect()->back()->with([
+                'success' => "You Have Deleted Outlet ". " ". $details. " Assigned to ". " ". $distrib->name. " ". "Successfully",
+            ]);
+        }
+    
     }
 }

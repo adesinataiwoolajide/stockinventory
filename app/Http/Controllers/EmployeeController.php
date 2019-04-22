@@ -24,7 +24,7 @@ class EmployeeController extends Controller
      */
     public function index()
     {
-        $employee = Employee::orderBy("employee_id", "desc")->get();
+        $employee = $this->model->all();
         return view('administrator.employee.create')->with([
             "employee" => $employee,
         ]);
@@ -48,7 +48,40 @@ class EmployeeController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        if(auth()->user()->hasPermissionTo('employee-create')){
+            $this->validate($request, [
+                'full_name' =>'required|min:1|max:255',
+                'phone_number' => 'required|min:1|max:255|unique:employees',
+                'address' =>'required|min:1|max:255',
+                'contract_type' =>'required|min:1|max:255',
+            ]);
+            if(Employee::where('phone_number', $request->input('phone_number'))->exists()){
+                return redirect()->back()->with("error", $request->input("phone_number"). 
+                " Already in use by another Employee");
+            }
+            $data = ([
+                "employee" => new Employee,
+                "full_name" => $request->input("full_name"),
+                "phone_number" => $request->input("phone_number"),
+                "address" => $request->input("address"),
+                "contract_type" => $request->input("contract_type"),
+                
+            ]);
+
+            $log = new Activitylog([
+                "operations" => "Added ".$request->input("full_name"). " To The Employee List",
+                "user_id" => Auth::user()->user_id,
+            ]);
+
+            if($log->save() AND ($this->model->create($data))){
+                return redirect()->route("employee.create")->with("success", "You Have Added " 
+                .$request->input("full_name"). " To The Employee List Successfully");
+            }
+        } else{
+            return redirect()->back()->with([
+                'error' => "You Dont have Access To Create An Employee",
+            ]);
+        }
     }
 
     /**
@@ -91,8 +124,18 @@ class EmployeeController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($employee_id)
     {
-        //
+        $employee =  $this->model->show($employee_id); 
+        $details= $employee->full_name;  
+        $log = new Activitylog([
+            "operations" => "Deleted ". $details. " From The employee List",
+            "user_id" => Auth::user()->id,
+        ]);
+        if (($employee->delete($employee_id))AND ($employee->trashed())) {
+            return redirect()->back()->with([
+                'success' => "You Have Deleted ". " ". $details. " ". "From The Employee Details Successfully",
+            ]);
+        }
     }
 }

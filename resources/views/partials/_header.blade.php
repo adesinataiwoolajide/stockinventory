@@ -15,7 +15,9 @@
                 </div>
             </div>
         </div>
+        @include('partials._message')
         <div class="row">
+            
             <div class="col-12 col-sm-6 col-md-3 grid-margin stretch-card">
                 <div class="card icon-card-primary">
                     <div class="card-body">

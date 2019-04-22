@@ -48,9 +48,9 @@ class DistributorController extends Controller
     public function store(Request $request)
     {
         if(auth()->user()->hasPermissionTo('distributor-create')){
-           $validator =  $this->validate($request, [
+           $this->validate($request, [
                 'name' =>'required|min:1|max:255',
-                'email' =>'required|min:1|max:255|unique:distributors',
+                // 'email' =>'required|min:1|max:255|unique:distributors',
                 'phone_one' =>'required|min:1|max:255|unique:distributors',
                 'phone_two' =>'required|min:1|max:255|unique:distributors',
                 'address' =>'required|min:1|max:255',
@@ -58,40 +58,44 @@ class DistributorController extends Controller
                 'credit_reduction_per_month' =>'required|min:1|max:255',
                 
             ]);
-            // if ($validator->fails()) {
-            //     return redirect()->back()->with([
-            //         'error' => "",
-            //     ]);
-            // }
-            $data = ([
-                "distributor" => new Distributors,
-                "name" => $request->input("name"),
-                "phone_one" => $request->input("phone_one"),
-                "phone_two" => $request->input("phone_two"),
-                "email" => $request->input("email"),
-                "address" => $request->input("address"),
-                "credit_limit" => $request->input("credit_limit"),
-                "credit_reduction_per_month" => $request->input("credit_reduction_per_month"),
-            ]);
-            $role= "Distributor";
+            if(Distributors::where("phone_one", $request->input("phone_one"))->exists()){
+                return redirect()->back()->with("error", $request->input("phone_one"). 
+                " Already in use by another Distributor");
+            }elseif(Distributors::where("phone_two", $request->input("phone_two"))->exists()){
+                return redirect()->back()->with("error", $request->input("phone_two"). 
+                " Already in use by another Distributor");
+            
+            }else{
+                $data = ([
+                    "distributor" => new Distributors,
+                    "name" => $request->input("name"),
+                    "phone_one" => $request->input("phone_one"),
+                    "phone_two" => $request->input("phone_two"),
+                    "email" => $request->input("email"),
+                    "address" => $request->input("address"),
+                    "credit_limit" => $request->input("credit_limit"),
+                    "credit_reduction_per_month" => $request->input("credit_reduction_per_month"),
+                ]);
+                
+                $use = new User([
+                    "email" => $request->input("email"),
+                    "name" => $request->input("name"),
+                    "password" => Hash::make($request->input("email")),
+                    "role" => 'Distributor',
+                    "status" => 1,
+                    // "registration_number" => rand(0002, 2000),
+                ]);
 
-            $use = new User([
-                "email" => $request->input("email"),
-                "name" => $request->input("name"),
-                "password" => Hash::make($request->input("email")),
-                "role" => $role,
-                "status" => 0,
-                "registration_number" => rand(0002, 2000),
-            ]);
+                $log = new Activitylog([
+                    "operations" => "Added ".$request->input("name"). " To The Distributor List",
+                    "user_id" => Auth::user()->user_id,
+                ]);
 
-            $log = new Activitylog([
-                "operations" => "Added ".$request->input("name"). " To The Distributor List",
-                "user_id" => Auth::user()->user_id,
-            ]);
-
-            if($log->save() AND ($this->model->create($data)) AND $use->save()){
-                return redirect()->route("distributor.create")->with("success", "You Have Added " 
-                .$request->input("name"). " To The Distributor List Successfully");
+                if($this->model->create($data) AND ($log->save()) AND ($use->save())){
+                    $addRoles = $use->assignRole("Distributor");
+                    return redirect()->route("distributor.create")->with("success", "You Have Added " 
+                    .$request->input("name"). " To The Distributor List Successfully");
+                }
             }
         } else{
             return redirect()->back()->with([
@@ -140,8 +144,21 @@ class DistributorController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($distributor_id)
     {
-        //
+        $distributor =  $this->model->show($distributor_id); 
+        $details = Distributors::where([
+            "distributor_id" => $distributor_id, 
+        ])->first();
+        //$details= $distributor->distributor_name;  
+        $log = new Activitylog([
+            "operations" => "Deleted ". " ". $details->name. " ". " From The Distributors List",
+            "user_id" => Auth::user()->id,
+        ]);
+        if (($distributor->delete($distributor_id)) AND ($distributor->trashed())) {
+            return redirect()->back()->with([
+                'success' => "You Have Deleted ". " ". $details->name. " ". "From The Distributor Details Successfully",
+            ]);
+        }
     }
 }

@@ -2,12 +2,15 @@
 
 namespace App;
 
+
+
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
 
     use Notifiable;
@@ -19,9 +22,10 @@ class User extends Authenticatable
      * @var array
      */
     protected $table = 'users';
-    public $primaryKey = 'user_id';
+    public $primaryKey = 'email';
+    protected $guard_name = 'web';
     protected $fillable = [
-        'name', 'email', 'password', 'role', 'status', 'registration_number',
+        'name', 'email', 'password', 'role', 'status'
     ];
 
     /**

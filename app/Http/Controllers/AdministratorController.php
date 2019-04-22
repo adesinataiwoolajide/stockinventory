@@ -7,7 +7,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
-use App\User;
+use App\{Categories, User, Activitylog, AssignOutlet, Distributors, Suppliers, Employee,InventoryStock, Order, Outlets, Products, 
+    ProductVariants, Sales, WareHouseManagement};
+
 
 class AdministratorController extends Controller
 {
@@ -18,6 +20,61 @@ class AdministratorController extends Controller
      */
     public function index()
     {
+        $categories = Categories::all();
+        $user = User::all();
+        $log = Activitylog::all(); 
+        $assign = AssignOutlet::all();
+        $distributor = Distributors::all();
+        $supplier = Suppliers::all();
+        $employee = Employee::all();
+        $inventory = InventoryStock::all();
+        $order = Order::all(); 
+        $outlet = Outlets::all();
+        $product = Products::all();
+        $variant = ProductVariants::all();
+        $sales = Sales::all();
+        $warehouse = WareHouseManagement::all();
+
+
+        
+
+        // Permission::create([
+        //     'name'=>'salary-edit',
+        //     'guard_name' => 'web'
+        // ]);
+        // auth()->user()->givePermissionTo([
+        //     'product-create', 'product-edit','product-list', 'product-delete',
+        //     'category-create', 'category-edit', 'category-delete', 'category-update',
+        //     'variant-create', 'variant-delete', 'variant-update',
+        //     'distributor-create', 'distributor-edit', 'distributor-update', 'distributor-delete',
+        //     'supplier-create', 'supplier-edit', 'supplier-update', 'supplier-delete',
+        //     'outlet-create', 'outlet-edit', 'outlet-update', 'outlet-delete',
+        //     'warehouse-create', 'warehouse-edit', 'warehouse-delete', 'warehouse-update',
+
+        //     'employee-create', 'employee-delete', 'employee-update', 'employee-edit',
+        //     'user-create', 'user-delete', 'user-update', 'user-edit',
+        //     'salary-create', 'salary-delete', 'salary-update', 'salary-edit',
+        //     // 'account-create', 'account-delete', 'account-update', 'account-edit',
+
+        // ]);
+
+
+        return view("administrator.dashboard")->with([
+            'categories' => $categories,
+            'user' => $user,
+            'log' => $log,
+            'assign' => $assign,
+            'distributor' => $distributor,
+            'supplier' => $supplier,
+            'employee' => $employee,
+            'inventory' => $inventory,
+            'order' => $order,
+            'outlet' => $outlet,
+            'product' => $product,
+            'variant' => $variant,
+            'sales' => $sales,
+            'warehouse' => $warehouse,
+        ]);
         //Creating Roles
         // Role::create([
         //     'name'=>'Accountant',
@@ -25,10 +82,12 @@ class AdministratorController extends Controller
         // ]);
 
         //Creating Permission
-        // Permission::create([
-        //     'name'=>'warehouse-delete',
-        //     'guard_name' => 'web'
-        // ]);
+        
+
+         // return auth()->user()->getAllPermissions();
+        // return User::role('Administrator')->get();
+       // return auth()->user()->assignRole('Administrator');
+        //return $role = Role::where('name', 'Administrator')->first();
 
         // Granting Permission
         // $role = Role::where('name', 'Administrator')->first();
@@ -46,26 +105,28 @@ class AdministratorController extends Controller
 
         //checking User Permission
 
-       // return auth()->user()->getAllPermissions();
+        //return auth()->user()->getAllPermissions();
 
         //return User::role('Administrator')->get();
         //return User::permission('category-create')->get();
 
         //giving multiple permission
-        auth()->user()->givePermissionTo([
-            // 'product-edit','product-list', 'product-delete',
-            // 'category-edit', 'category-delete', 'category-update',
-            // 'variant-create', 'variant-delete', 'variant-update',
-            // 'distributor-create', 'distributor-edit', 'distributor-update', 'distributor-delete',
-            // 'supplier-create', 'supplier-edit', 'supplier-update', 'supplier-delete',
-            // 'outlet-create', 'outlet-edit', 'outlet-update', 'outlet-delete',
+        // auth()->user()->givePermissionTo([
+        //     // 'product-edit','product-list', 'product-delete',
+        //     // 'category-edit', 'category-delete', 'category-update',
+        //     // 'variant-create', 'variant-delete', 'variant-update',
+        //     // 'distributor-create', 'distributor-edit', 'distributor-update', 'distributor-delete',
+        //     // 'supplier-create', 'supplier-edit', 'supplier-update', 'supplier-delete',
+        //     // 'outlet-create', 'outlet-edit', 'outlet-update', 'outlet-delete',
+        //     // 'warehouse-create', 'warehouse-edit', 'warehouse-delete', 'warehouse-update',
 
-            'warehouse-create', 'warehouse-edit', 'warehouse-delete', 'warehouse-update',
+        //     'employee-create', 'employee-delete', 'employee-update', 'employee-edit',
+        //     'user-create', 'user-delete', 'user-update', 'user-edit',
+        //     'salary-create', 'salary-delete', 'salary-update', 'salary-edit',
+        //     'account-create', 'account-delete', 'account-update', 'account-edit',
 
-        ]);
+        // ]);
 
-
-        return view("administrator.dashboard");
     }
 
     public function userlogin(Request $request)
@@ -75,17 +136,38 @@ class AdministratorController extends Controller
             "password" => $request->input("password"),
         ];
         if(Auth::attempt($data)){
+            // auth()->user()->assignRole('Administrator');
             $usertype = Auth::user()->role;
-            if($usertype == "Administrator"){
-                $request->session()->flash('success', 'Login successfully');
-                return redirect()->route("administrator.dashboard");
+            if(!empty($usertype)){
+                $message = array();
+                if(auth()->user()->hasRole('Administrator')){
+                    $message = "Welcome to Super Administrator Dashboard";
+                }elseif(auth()->user()->hasRole('Admin')){
+                    $message = "Welcome to Administrator Dashboard";
+                }elseif(auth()->user()->hasRole('Editor')){
+                    $message = "Welcome to Editor Dashboard";
+                }elseif(auth()->user()->hasRole('Accountant')){
+                    $message = "Welcome to Accountant Dashboard";
+                }elseif(auth()->user()->hasRole('Receptionist')){
+                    $message = "Welcome to Receptionist Dashboard";
+                }else{
+                    $request->session()->flash('Welcome to Dashboard');
+                }
+                return redirect()->route("administrator.dashboard")->with([
+                    'message' => $message,
+                ]);
             }else{
-                $message = "Ooops!!! Invalid User Name or Password" ;
-                return redirect()->back()->with("error", $message);
+               
+                return redirect()->back()->with([
+                    "error" => "Ooops!!! Invalid User Name or Password",
+                ]);
             }
+
         }else{
-            $message = "Ooops!! Your Account Does Not Exist" ;
-            return redirect()->back()->with("error", $message);
+            
+            return redirect()->back()->with([
+                "error" => "Ooops!! Your Account Does Not Exist",
+            ]);
         }
     }
 

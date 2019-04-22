@@ -12,18 +12,17 @@
 */
 
 Route::get('/', function () {
-    return view('auth.login');
+    return view('auth.login')->with('error', 'Please Login with Your Details');
 });
-Route::get('', function () {
-    return view('auth.login');
-});
+//Auth::routes();
+
 Route::post("/", "AdministratorController@userlogin")->name("admin.login");
 Route::get("/logout", "AdministratorController@logout")->name("admin.logout");
 
-Auth::routes(['verify' => true]);
 
+Auth::routes(['verify' => true]);
 //Route::get('/home', 'HomeController@index')->name('home');
-Route::group(["prefix" => "administrator", "middleware" => "auth"], function(){
+Route::group(["prefix" => "administrator", "middleware" => "verified"], function(){
     Route::get("/dashboard", "AdministratorController@index")->name("administrator.dashboard");
 
     Route::group(["prefix" => "categories"], function(){
@@ -41,7 +40,8 @@ Route::group(["prefix" => "administrator", "middleware" => "auth"], function(){
         Route::get("/delete/{distributor_id}", "DistributorController@destroy")->name("distributor.delete");
         Route::post("/update/{distributor_id}", "DistributorController@update")->name("distributor.update"); 
         Route::get("/assign_outlet", "AssignOutletController@index")->name("assign.outlet.create");  
-        Route::post("/save_assign_outlet", "AssignOutletController@store")->name("assign.outlet.save");  
+        Route::post("/save_assign_outlet", "AssignOutletController@store")->name("assign.outlet.save");
+        Route::get("/delete/{assign_id}", "AssignOutletController@destroy")->name("assign.outlet.delete");  
     });
 
     Route::group(["prefix" => "outlets"], function(){
@@ -76,22 +76,6 @@ Route::group(["prefix" => "administrator", "middleware" => "auth"], function(){
         Route::post("/update/{ware_house_id}", "WareHouseManagementController@update")->name("warehouse.update");   
     });
 
-    Route::group(["prefix" => "products"], function(){
-        Route::get("/create", "ProductController@index")->name("product.create");
-        Route::post("/save", "ProductController@store")->name("product.save");
-        Route::get("/edit/{slug}", "ProductController@edit")->name("product.edit");   
-        Route::get("/delete/{slug}", "ProductController@destroy")->name("product.delete");
-        Route::post("/update/{slug}", "ProductController@update")->name("product.update");   
-    });
-
-    Route::group(["prefix" => "roles"], function(){
-        Route::get("/create", "RoleController@index")->name("role.create");
-        Route::post("/save", "RoleController@store")->name("role.save");
-        Route::get("/edit/{user_id}", "RoleController@edit")->name("role.edit");   
-        Route::get("/delete/{role_id}", "RoleController@destroy")->name("role.delete");
-        Route::post("/update/{role_id}", "RoleController@update")->name("role.update");   
-    });
-
     Route::group(["prefix" => "users"], function(){
         Route::get("/create", "UserController@index")->name("user.create");
         Route::post("/save", "UserController@store")->name("user.save");
@@ -100,6 +84,23 @@ Route::group(["prefix" => "administrator", "middleware" => "auth"], function(){
         Route::post("/update/{user_id}", "UserController@update")->name("user.update");   
     });
 
+    Route::group(["prefix" => "employee"], function(){
+        Route::get("/create", "EmployeeController@index")->name("employee.create");
+        Route::post("/save", "EmployeeController@store")->name("employee.save");
+        Route::get("/edit/{employee_id}", "EmployeeController@edit")->name("employee.edit");   
+        Route::get("/delete/{employee_id}", "EmployeeController@destroy")->name("employee.delete");
+        Route::post("/update/{employee_id}", "EmployeeController@update")->name("employee.update");   
+    });
+
+    Route::group(["prefix" => "products"], function(){
+        Route::get("/create", "ProductController@index")->name("product.create");
+        Route::post("/save", "ProductController@store")->name("product.save");
+        Route::get("/edit/{slug}", "ProductController@edit")->name("product.edit");   
+        Route::get("/delete/{slug}", "ProductController@destroy")->name("product.delete");
+        Route::post("/update/{slug}", "ProductController@update")->name("product.update");   
+    });
+
+
     Route::group(["prefix" => "user-roles"], function(){
         Route::get("/create", "UserRoleController@index")->name("roles.create");
         Route::post("/save", "UserRoleController@store")->name("roles.save");
@@ -107,15 +108,12 @@ Route::group(["prefix" => "administrator", "middleware" => "auth"], function(){
         Route::get("/delete/{roles_id}", "UserRoleController@destroy")->name("roles.delete");
         Route::post("/update/{roles_id}", "UserRoleController@update")->name("roles.update");   
     });
-
-   
-
-    Route::group(["prefix" => "employee"], function(){
-        Route::get("/create", "EmployeeController@index")->name("employee.create");
-        Route::post("/save", "EmployeeController@store")->name("employee.save");
-        Route::get("/edit/{email}", "EmployeeController@edit")->name("employee.edit");   
-        Route::get("/delete/{email}", "EmployeeController@destroy")->name("employee.delete");
-        Route::post("/update/{email}", "EmployeeController@update")->name("employee.update");   
+    Route::group(["prefix" => "roles"], function(){
+        Route::get("/create", "RoleController@index")->name("role.create");
+        Route::post("/save", "RoleController@store")->name("role.save");
+        Route::get("/edit/{user_id}", "RoleController@edit")->name("role.edit");   
+        Route::get("/delete/{role_id}", "RoleController@destroy")->name("role.delete");
+        Route::post("/update/{role_id}", "RoleController@update")->name("role.update");   
     });
 });
 
